@@ -131,6 +131,29 @@ resp, err := client.Payouts.Disburse(map[string]interface{}{
 })
 ```
 
+#### Crypto Payouts
+
+```go
+// Get supported crypto payout assets
+resp, err := client.CryptoPayouts.SupportedAssets()
+
+// Add a wallet beneficiary
+resp, err = client.CryptoPayouts.AddBeneficiary(map[string]interface{}{
+    "name": "OMU",
+    "asset": "TRX_USDT_S2UZ",
+    "wallet_address": "wallet_address",
+})
+
+// Initiate a crypto payout
+resp, err = client.CryptoPayouts.InitiatePayout(map[string]interface{}{
+    "amount": "2",
+    "currency": "TRX_USDT_S2UZ",
+    "address_reference": "beneficiary_reference",
+    "customer_reference": "customer_ref_123",
+    "narration": "Stablecoin payout",
+})
+```
+
 #### Refunds
 
 ```go
@@ -140,6 +163,16 @@ resp, err := client.Refunds.Initiate(map[string]interface{}{
     "transaction_ref": "ref_123",
     "amount": 500, // Optional if full refund
 })
+```
+
+#### Failed Payout Webhooks
+
+```go
+// List failed payout webhooks
+resp, err := client.Webhooks.FailedPayoutWebhooks()
+
+// Retry a failed payout webhook
+resp, err = client.Webhooks.RetryFailedPayoutWebhook("50")
 ```
 
 #### Virtual Accounts
@@ -171,9 +204,8 @@ resp, err = client.VirtualAccounts.List()
 // Get available virtual account providers
 resp, err = client.VirtualAccounts.Providers()
 
-// Submit OTP to complete the two-step Wema flow
-resp, err = client.VirtualAccounts.SubmitOtp(map[string]interface{}{
-    "merchant_id":    "123",
+// Submit OTP to generate the Wema wallet
+resp, err = client.VirtualAccounts.GenerateWallet(map[string]interface{}{
     "otp":            "768238",
     "customer_email": "hello@gmail.com",
 })

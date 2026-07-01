@@ -27,13 +27,17 @@ type Client struct {
 	retries    int
 	timeout    time.Duration
 
-	Cards   *CardsService
-	MoMo    *MoMoService
-	Wallets *WalletsService
-	FX      *FXService
-	Payouts *PayoutsService
+	Cards           *CardsService
+	MoMo            *MoMoService
+	Wallets         *WalletsService
+	FX              *FXService
+	Payouts         *PayoutsService
 	Refunds         *RefundsService
 	VirtualAccounts *VirtualAccountsService
+	Checkout        *CheckoutService
+	Crypto          *CryptoService
+	CryptoPayouts   *CryptoPayoutsService
+	Webhooks        *WebhooksService
 }
 
 // Option allows configuring the client
@@ -134,6 +138,10 @@ func New(apiKey string, opts ...Option) (*Client, error) {
 	c.Payouts = &PayoutsService{client: c}
 	c.Refunds = &RefundsService{client: c}
 	c.VirtualAccounts = &VirtualAccountsService{client: c}
+	c.Checkout = &CheckoutService{client: c}
+	c.Crypto = &CryptoService{client: c}
+	c.CryptoPayouts = &CryptoPayoutsService{client: c}
+	c.Webhooks = &WebhooksService{client: c}
 
 	return c, nil
 }

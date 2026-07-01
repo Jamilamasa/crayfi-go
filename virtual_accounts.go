@@ -20,6 +20,10 @@ func (s *VirtualAccountsService) Providers() (interface{}, error) {
 	return s.client.get("/api/virtual-accounts/providers", nil)
 }
 
+func (s *VirtualAccountsService) GenerateWallet(data interface{}) (interface{}, error) {
+	return s.client.post("/api/virtual-accounts/generate-wallet", data)
+}
+
 func (s *VirtualAccountsService) SubmitOtp(data interface{}) (interface{}, error) {
-	return s.client.post("/api/virtual-accounts/submit-otp", data)
+	return s.GenerateWallet(data)
 }
