@@ -29,6 +29,15 @@ func NewAuthenticationException(message string) *AuthenticationException {
 	return &AuthenticationException{baseException{Message: message}}
 }
 
+type SignatureException struct {
+	AuthenticationException
+	Code string
+}
+
+func NewSignatureException(message, code string) *SignatureException {
+	return &SignatureException{AuthenticationException: *NewAuthenticationException(message), Code: code}
+}
+
 // ValidationException is thrown when input validation fails
 type ValidationException struct {
 	baseException

@@ -1,0 +1,16 @@
+{
+  "private_key_pem": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgVnewNFQAFCc9noxQ\npdHAnmtofoBiZ3CszcXvOk81+6ShRANCAAS7DRFGTHEvFWJ5QvFcK8j/3vznGcoP\n/E7GwqOcqy3sAdr84eDLkL+WegmfRxJKiWWHk3GcPsTegre2Txhr3VNX\n-----END PRIVATE KEY-----\n",
+  "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEuw0RRkxxLxVieULxXCvI/9785xnK\nD/xOxsKjnKst7AHa/OHgy5C/lnoJn0cSSollh5NxnD7E3oK3tk8Ya91TVw==\n-----END PUBLIC KEY-----\n",
+  "fingerprint": "3814bf5adc9aa1eb783960e8abfce905101d156e81972aa10b420826b3d61b24",
+  "key_id": "00000000-0000-4000-8000-000000000000",
+  "t": "1757937600000",
+  "n": "3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01",
+  "challenge": "piP0h3sh0pc9eQcJqBamxFHjk6gDf4fsMXJg77fVebRMQ18IF1jKekosf2QTk7cn4q2GEHsKF45lUASK0CpTZIFsvXtIXxjX",
+  "cases": [
+    {"name":"get-no-body","method":"GET","path":"/api/balance","query":{},"body":"","signing_string":"GET\n/api/balance\n1757937600000\n3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"name":"post-json-body","method":"POST","path":"/api/collection/initiate","query":{},"body":"{\"amount\":1000,\"currency\":\"NGN\"}","signing_string":"POST\n/api/collection/initiate\n1757937600000\n3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01\n6469249697a442b13fd6384708be6aede58b356f534aee1549b252ef370a3e36"},
+    {"name":"trailing-slash","method":"GET","path":"/api/balance/","query":{},"body":"","signing_string":"GET\n/api/balance\n1757937600000\n3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"name":"query-sorted","method":"GET","path":"/api/conversions","query":{"per_page":"5","page":"1"},"body":"","signing_string":"GET\n/api/conversions?page=1&per_page=5\n1757937600000\n3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    {"name":"query-encoding","method":"GET","path":"/api/conversions","query":{"tag":"a b","city":"São Paulo","flag":""},"body":"","signing_string":"GET\n/api/conversions?city=S%C3%A3o%20Paulo&flag=&tag=a%20b\n1757937600000\n3f0a2b7c-9d4e-4c1a-8b2f-5e6d7c8b9a01\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+  ]
+}

@@ -21,11 +21,14 @@ const (
 
 // Client is the main Cray client
 type Client struct {
-	httpClient *http.Client
-	apiKey     string
-	baseURL    string
-	retries    int
-	timeout    time.Duration
+	httpClient   *http.Client
+	apiKey       string
+	baseURL      string
+	retries      int
+	timeout      time.Duration
+	signingKey   string
+	signingKeyID string
+	signingError error
 
 	Cards           *CardsService
 	MoMo            *MoMoService
@@ -69,6 +72,20 @@ func WithTimeout(seconds int) Option {
 func WithRetries(retries int) Option {
 	return func(c *Client) {
 		c.retries = retries
+	}
+}
+
+func WithSigningKey(privateKeyPEM, keyID string) Option {
+	return func(c *Client) { c.signingKey, c.signingKeyID = privateKeyPEM, keyID }
+}
+func WithSigningKeyFile(path, keyID string) Option {
+	return func(c *Client) {
+		key, err := os.ReadFile(path)
+		if err != nil {
+			c.signingError = fmt.Errorf("read request signing private key: %w", err)
+			return
+		}
+		c.signingKey, c.signingKeyID = string(key), keyID
 	}
 }
 
@@ -125,10 +142,32 @@ func New(apiKey string, opts ...Option) (*Client, error) {
 		retries: retries,
 		timeout: time.Duration(timeout) * time.Second,
 	}
+	privateKey, privateKeyPath, keyID := os.Getenv("CRAY_SIGNING_PRIVATE_KEY"), os.Getenv("CRAY_SIGNING_PRIVATE_KEY_PATH"), os.Getenv("CRAY_SIGNING_KEY_ID")
+	if privateKey != "" || privateKeyPath != "" || keyID != "" {
+		if privateKey == "" && privateKeyPath != "" {
+			value, err := os.ReadFile(privateKeyPath)
+			if err != nil {
+				return nil, NewValidationException("read request signing private key: " + err.Error())
+			}
+			privateKey = string(value)
+		}
+		c.signingKey, c.signingKeyID = privateKey, keyID
+	}
 
 	// Apply options (overriding env vars)
 	for _, opt := range opts {
 		opt(c)
+	}
+	if c.signingError != nil {
+		return nil, NewValidationException(c.signingError.Error())
+	}
+	if c.signingKey != "" || c.signingKeyID != "" {
+		if c.signingKey == "" || c.signingKeyID == "" {
+			return nil, NewValidationException("Request signing requires both a private key and signing key ID.")
+		}
+		if _, err := parseSigningPrivateKey(c.signingKey); err != nil {
+			return nil, NewValidationException(err.Error())
+		}
 	}
 
 	c.Cards = &CardsService{client: c}
@@ -150,8 +189,10 @@ func (c *Client) request(method, path string, body interface{}) (interface{}, er
 	url := fmt.Sprintf("%s%s", strings.TrimRight(c.baseURL, "/"), path)
 
 	var reqBody io.Reader
+	var jsonBytes []byte
+	var err error
 	if body != nil {
-		jsonBytes, err := json.Marshal(body)
+		jsonBytes, err = json.Marshal(body)
 		if err != nil {
 			return nil, NewValidationException("Invalid request body: " + err.Error())
 		}
@@ -159,7 +200,6 @@ func (c *Client) request(method, path string, body interface{}) (interface{}, er
 	}
 
 	var resp *http.Response
-	var err error
 
 	// Retry logic
 	for i := 0; i <= c.retries; i++ {
@@ -172,6 +212,13 @@ func (c *Client) request(method, path string, body interface{}) (interface{}, er
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 		req.Header.Set("Accept", "application/json")
+		if c.signingKey != "" {
+			header, signErr := BuildSignatureHeader(method, path, jsonBytes, c.signingKey, c.signingKeyID, "", "")
+			if signErr != nil {
+				return nil, signErr
+			}
+			req.Header.Set("X-Signature", header)
+		}
 
 		resp, err = c.httpClient.Do(req)
 
@@ -184,7 +231,6 @@ func (c *Client) request(method, path string, body interface{}) (interface{}, er
 		if i < c.retries {
 			// Reset body reader for retry if needed
 			if body != nil {
-				jsonBytes, _ := json.Marshal(body)
 				reqBody = bytes.NewBuffer(jsonBytes)
 			}
 			time.Sleep(1 * time.Second)
@@ -212,6 +258,9 @@ func (c *Client) request(method, path string, body interface{}) (interface{}, er
 			if v, exists := m["message"]; exists {
 				msg = fmt.Sprintf("%v", v)
 			}
+			if code, ok := m["code"].(string); ok && (strings.HasPrefix(code, "SIGNATURE_") || code == "SIGNING_KEY_NOT_FOUND" || code == "SIGNING_KEY_AMBIGUOUS") {
+				return nil, NewSignatureException(msg, code)
+			}
 		}
 		return nil, NewAPIException(msg, resp.StatusCode, result)
 	}
@@ -227,11 +276,7 @@ func (c *Client) get(path string, params map[string]string) (interface{}, error)
 	fullPath := path
 	if len(params) > 0 {
 		fullPath += "?"
-		qs := []string{}
-		for k, v := range params {
-			qs = append(qs, fmt.Sprintf("%s=%s", k, v))
-		}
-		fullPath += strings.Join(qs, "&")
+		fullPath += canonicalQuery(params)
 	}
 	return c.request("GET", fullPath, nil)
 }
