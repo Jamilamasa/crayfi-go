@@ -44,6 +44,20 @@ func main() {
 }
 ```
 
+## Request signing
+
+Pass both a P-256 private key and Key ID with `crayfi.WithSigningKey`, or use
+`CRAY_SIGNING_PRIVATE_KEY` (or `CRAY_SIGNING_PRIVATE_KEY_PATH`) together with
+`CRAY_SIGNING_KEY_ID`. The SDK always sends the Key ID (`kid`) in `X-Signature`.
+
+```bash
+go run ./cmd/crayfi-signing keygen
+CRAY_SIGNING_PRIVATE_KEY_PATH=private-key.pem go run ./cmd/crayfi-signing sign-challenge "<challenge>"
+```
+
+Use `crayfi.GenerateSigningKeyPair`, `SignChallenge`, and `Fingerprint` in code.
+See the [request-signing reference](https://docs.crayfi.com/cray-docs/request-signing).
+
 ### Modules
 
 #### Cards
